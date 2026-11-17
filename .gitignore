@@ -1,0 +1,15 @@
+node_modules/
+data/
+.local/
+people.local.json
+.env
+.env.*
+!.env.example
+*.swp
+*.sqlite*
+test-results/
+playwright-report/
+
+# Independent private roster repository; never publish with the app.
+/team-config/
+/public-export/

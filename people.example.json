@@ -1,0 +1,6 @@
+{
+  "people": [
+    { "githubId": "1234567890", "internal": true, "customers": [] },
+    { "githubId": "1234567891", "internal": false, "customers": ["Example customer"] }
+  ]
+}

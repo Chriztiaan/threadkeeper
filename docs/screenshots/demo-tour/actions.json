@@ -1,0 +1,255 @@
+[
+  {
+    "t": 0.5,
+    "type": "mark",
+    "name": "01-welcome"
+  },
+  {
+    "t": 1.5,
+    "type": "click",
+    "key": "get-started"
+  },
+  {
+    "t": 2,
+    "type": "mark",
+    "name": "02-connect-github"
+  },
+  {
+    "t": 2.5,
+    "type": "click",
+    "key": "github-token-input"
+  },
+  {
+    "t": 2.7,
+    "type": "type",
+    "text": "mock_token",
+    "every": 0.08
+  },
+  {
+    "t": 3.7,
+    "type": "mark",
+    "name": "03-mock-token"
+  },
+  {
+    "t": 4,
+    "type": "click",
+    "key": "connect-github-token"
+  },
+  {
+    "t": 5,
+    "type": "mark",
+    "name": "04-follow-up"
+  },
+  {
+    "t": 6,
+    "type": "click",
+    "key": "nav-day"
+  },
+  {
+    "t": 7,
+    "type": "mark",
+    "name": "05-day"
+  },
+  {
+    "t": 8,
+    "type": "click",
+    "key": "nav-week"
+  },
+  {
+    "t": 9,
+    "type": "mark",
+    "name": "06-week"
+  },
+  {
+    "t": 10,
+    "type": "click",
+    "key": "nav-month"
+  },
+  {
+    "t": 11,
+    "type": "mark",
+    "name": "07-month"
+  },
+  {
+    "t": 12,
+    "type": "click",
+    "key": "nav-six-months"
+  },
+  {
+    "t": 13,
+    "type": "mark",
+    "name": "08-six-months"
+  },
+  {
+    "t": 14,
+    "type": "click",
+    "key": "nav-cold"
+  },
+  {
+    "t": 15,
+    "type": "mark",
+    "name": "09-cold"
+  },
+  {
+    "t": 16,
+    "type": "click",
+    "key": "dev-review"
+  },
+  {
+    "t": 17,
+    "type": "mark",
+    "name": "10-review"
+  },
+  {
+    "t": 18,
+    "type": "click",
+    "key": "dev-assigned"
+  },
+  {
+    "t": 19,
+    "type": "mark",
+    "name": "11-assigned"
+  },
+  {
+    "t": 20,
+    "type": "click",
+    "key": "dev-created"
+  },
+  {
+    "t": 21,
+    "type": "mark",
+    "name": "12-created"
+  },
+  {
+    "t": 22,
+    "type": "click",
+    "key": "dev-participating"
+  },
+  {
+    "t": 23,
+    "type": "mark",
+    "name": "13-participating"
+  },
+  {
+    "t": 23,
+    "type": "click",
+    "key": "entry-showcase-0"
+  },
+  {
+    "t": 24,
+    "type": "scroll",
+    "key": "detail-scroll",
+    "dy": -800,
+    "dur": 0.8
+  },
+  {
+    "t": 25,
+    "type": "mark",
+    "name": "14-discussion"
+  },
+  {
+    "t": 26,
+    "type": "click",
+    "key": "more-comment-comment-2"
+  },
+  {
+    "t": 27,
+    "type": "mark",
+    "name": "15-expanded-comment"
+  },
+  {
+    "t": 28,
+    "type": "click",
+    "key": "collapse-comment-comment-2"
+  },
+  {
+    "t": 29,
+    "type": "mark",
+    "name": "16-collapsed-comment"
+  },
+  {
+    "t": 30,
+    "type": "click",
+    "key": "collapse-comment-comment-2"
+  },
+  {
+    "t": 32,
+    "type": "click",
+    "key": "manage-repositories"
+  },
+  {
+    "t": 33,
+    "type": "mark",
+    "name": "14-repositories"
+  },
+  {
+    "t": 34,
+    "type": "click",
+    "key": "settings-maintainers"
+  },
+  {
+    "t": 35,
+    "type": "mark",
+    "name": "15-maintainers"
+  },
+  {
+    "t": 36,
+    "type": "click",
+    "key": "settings-customers"
+  },
+  {
+    "t": 37,
+    "type": "mark",
+    "name": "16-vips"
+  },
+  {
+    "t": 38,
+    "type": "click",
+    "key": "highlight-customer-morgan"
+  },
+  {
+    "t": 39,
+    "type": "menu-pick",
+    "id": "subtle-tint"
+  },
+  {
+    "t": 40,
+    "type": "click",
+    "key": "save-customer-settings"
+  },
+  {
+    "t": 41,
+    "type": "mark",
+    "name": "17-vip-saved"
+  },
+  {
+    "t": 42,
+    "type": "click",
+    "key": "settings-developer"
+  },
+  {
+    "t": 43,
+    "type": "mark",
+    "name": "18-developer-settings"
+  },
+  {
+    "t": 44,
+    "type": "key",
+    "name": "Escape"
+  },
+  {
+    "t": 45,
+    "type": "click",
+    "key": "nav-all"
+  },
+  {
+    "t": 46,
+    "type": "mark",
+    "name": "19-finish"
+  },
+  {
+    "t": 47,
+    "type": "mark",
+    "name": "end"
+  }
+]

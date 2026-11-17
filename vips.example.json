@@ -1,0 +1,11 @@
+{
+  "vips": [
+    {
+      "login": "example-developer",
+      "fullName": "Example Developer",
+      "notes": "Partner developer. Follow up before the next release.",
+      "highlight": "gold-star",
+      "company": "Example Organization"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+name: Tests
+on:
+  pull_request:
+  push:
+    branches: [main, init]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: macos-15
+    env:
+      CARGO_INCREMENTAL: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup show
+      - run: cargo test --workspace --locked

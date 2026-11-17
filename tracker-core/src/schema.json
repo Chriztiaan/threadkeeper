@@ -1,0 +1,487 @@
+{
+  "tables": [
+    {
+      "name": "maintainers",
+      "columns": [
+        {
+          "name": "login",
+          "type": "TEXT"
+        }
+      ],
+      "local_only": true,
+      "indexes": []
+    },
+    {
+      "name": "engagement_events",
+      "columns": [
+        {
+          "name": "item_id",
+          "type": "TEXT"
+        },
+        {
+          "name": "kind",
+          "type": "TEXT"
+        },
+        {
+          "name": "occurred_at",
+          "type": "TEXT"
+        },
+        {
+          "name": "author_id",
+          "type": "TEXT"
+        },
+        {
+          "name": "url",
+          "type": "TEXT"
+        }
+      ],
+      "local_only": true,
+      "indexes": [
+        {
+          "name": "latest",
+          "columns": [
+            {
+              "name": "item_id",
+              "type": "TEXT",
+              "ascending": true
+            },
+            {
+              "name": "occurred_at",
+              "type": "TEXT",
+              "ascending": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "engagement_sync",
+      "columns": [
+        {
+          "name": "synced_at",
+          "type": "TEXT"
+        },
+        {
+          "name": "observed_updated_at",
+          "type": "TEXT"
+        },
+        {
+          "name": "last_attempt",
+          "type": "TEXT"
+        },
+        {
+          "name": "error",
+          "type": "TEXT"
+        },
+        {
+          "name": "next_retry",
+          "type": "TEXT"
+        },
+        {
+          "name": "failures",
+          "type": "INTEGER"
+        }
+      ],
+      "local_only": true,
+      "indexes": []
+    },
+    {
+      "name": "advice",
+      "columns": [
+        {
+          "name": "content",
+          "type": "TEXT"
+        },
+        {
+          "name": "enabled",
+          "type": "INTEGER"
+        },
+        {
+          "name": "updated_at",
+          "type": "TEXT"
+        }
+      ],
+      "local_only": true,
+      "indexes": []
+    },
+    {
+      "name": "repositories",
+      "columns": [
+        {
+          "name": "name",
+          "type": "TEXT"
+        },
+        {
+          "name": "configured_name",
+          "type": "TEXT"
+        },
+        {
+          "name": "url",
+          "type": "TEXT"
+        },
+        {
+          "name": "project",
+          "type": "TEXT"
+        },
+        {
+          "name": "enabled",
+          "type": "INTEGER"
+        },
+        {
+          "name": "position",
+          "type": "INTEGER"
+        },
+        {
+          "name": "include_terms",
+          "type": "TEXT"
+        }
+      ],
+      "local_only": true,
+      "indexes": [
+        {
+          "name": "name",
+          "columns": [
+            {
+              "name": "name",
+              "type": "TEXT",
+              "ascending": true
+            }
+          ]
+        },
+        {
+          "name": "configured",
+          "columns": [
+            {
+              "name": "configured_name",
+              "type": "TEXT",
+              "ascending": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "items",
+      "columns": [
+        {
+          "name": "repo_id",
+          "type": "TEXT"
+        },
+        {
+          "name": "node_id",
+          "type": "TEXT"
+        },
+        {
+          "name": "number",
+          "type": "INTEGER"
+        },
+        {
+          "name": "type",
+          "type": "TEXT"
+        },
+        {
+          "name": "title",
+          "type": "TEXT"
+        },
+        {
+          "name": "body",
+          "type": "TEXT"
+        },
+        {
+          "name": "state",
+          "type": "TEXT"
+        },
+        {
+          "name": "state_reason",
+          "type": "TEXT"
+        },
+        {
+          "name": "author_id",
+          "type": "TEXT"
+        },
+        {
+          "name": "labels",
+          "type": "TEXT"
+        },
+        {
+          "name": "assignees",
+          "type": "TEXT"
+        },
+        {
+          "name": "comments",
+          "type": "INTEGER"
+        },
+        {
+          "name": "created_at",
+          "type": "TEXT"
+        },
+        {
+          "name": "updated_at",
+          "type": "TEXT"
+        },
+        {
+          "name": "closed_at",
+          "type": "TEXT"
+        },
+        {
+          "name": "merged_at",
+          "type": "TEXT"
+        },
+        {
+          "name": "url",
+          "type": "TEXT"
+        },
+        {
+          "name": "unavailable",
+          "type": "INTEGER"
+        },
+        {
+          "name": "last_seen",
+          "type": "TEXT"
+        },
+        {
+          "name": "included",
+          "type": "INTEGER"
+        },
+        {
+          "name": "ever_included",
+          "type": "INTEGER"
+        }
+      ],
+      "local_only": true,
+      "indexes": [
+        {
+          "name": "board",
+          "columns": [
+            {
+              "name": "repo_id",
+              "type": "TEXT",
+              "ascending": true
+            },
+            {
+              "name": "type",
+              "type": "TEXT",
+              "ascending": true
+            },
+            {
+              "name": "state",
+              "type": "TEXT",
+              "ascending": true
+            },
+            {
+              "name": "updated_at",
+              "type": "TEXT",
+              "ascending": true
+            }
+          ]
+        },
+        {
+          "name": "created",
+          "columns": [
+            {
+              "name": "created_at",
+              "type": "TEXT",
+              "ascending": true
+            }
+          ]
+        },
+        {
+          "name": "address",
+          "columns": [
+            {
+              "name": "repo_id",
+              "type": "TEXT",
+              "ascending": true
+            },
+            {
+              "name": "number",
+              "type": "INTEGER",
+              "ascending": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "authors",
+      "columns": [
+        {
+          "name": "login",
+          "type": "TEXT"
+        },
+        {
+          "name": "avatar_url",
+          "type": "TEXT"
+        },
+        {
+          "name": "url",
+          "type": "TEXT"
+        },
+        {
+          "name": "type",
+          "type": "TEXT"
+        }
+      ],
+      "local_only": true,
+      "indexes": []
+    },
+    {
+      "name": "identities",
+      "columns": [
+        {
+          "name": "internal",
+          "type": "INTEGER"
+        },
+        {
+          "name": "customers",
+          "type": "TEXT"
+        }
+      ],
+      "local_only": true,
+      "indexes": []
+    },
+    {
+      "name": "relationships",
+      "columns": [
+        {
+          "name": "source_id",
+          "type": "TEXT"
+        },
+        {
+          "name": "target_repo",
+          "type": "TEXT"
+        },
+        {
+          "name": "target_number",
+          "type": "INTEGER"
+        },
+        {
+          "name": "target_url",
+          "type": "TEXT"
+        },
+        {
+          "name": "kind",
+          "type": "TEXT"
+        }
+      ],
+      "local_only": true,
+      "indexes": [
+        {
+          "name": "source",
+          "columns": [
+            {
+              "name": "source_id",
+              "type": "TEXT",
+              "ascending": true
+            }
+          ]
+        },
+        {
+          "name": "target",
+          "columns": [
+            {
+              "name": "target_repo",
+              "type": "TEXT",
+              "ascending": true
+            },
+            {
+              "name": "target_number",
+              "type": "INTEGER",
+              "ascending": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "poll_state",
+      "columns": [
+        {
+          "name": "stage",
+          "type": "TEXT"
+        },
+        {
+          "name": "open_page",
+          "type": "INTEGER"
+        },
+        {
+          "name": "backfill_page",
+          "type": "INTEGER"
+        },
+        {
+          "name": "initial_at",
+          "type": "TEXT"
+        },
+        {
+          "name": "checkpoint",
+          "type": "TEXT"
+        },
+        {
+          "name": "last_attempt",
+          "type": "TEXT"
+        },
+        {
+          "name": "last_success",
+          "type": "TEXT"
+        },
+        {
+          "name": "error",
+          "type": "TEXT"
+        },
+        {
+          "name": "next_retry",
+          "type": "TEXT"
+        },
+        {
+          "name": "failures",
+          "type": "INTEGER"
+        },
+        {
+          "name": "reconcile_page",
+          "type": "INTEGER"
+        },
+        {
+          "name": "reconcile_started",
+          "type": "TEXT"
+        },
+        {
+          "name": "last_reconcile",
+          "type": "TEXT"
+        },
+        {
+          "name": "active",
+          "type": "INTEGER"
+        }
+      ],
+      "local_only": true,
+      "indexes": []
+    },
+    {
+      "name": "customers",
+      "columns": [
+        {
+          "name": "login",
+          "type": "TEXT"
+        },
+        {
+          "name": "full_name",
+          "type": "TEXT"
+        },
+        {
+          "name": "company",
+          "type": "TEXT"
+        },
+        {
+          "name": "highlight",
+          "type": "TEXT"
+        },
+        {
+          "name": "vip_company",
+          "type": "TEXT"
+        }
+      ],
+      "local_only": true,
+      "indexes": []
+    }
+  ]
+}

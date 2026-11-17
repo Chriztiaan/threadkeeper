@@ -1,0 +1,23 @@
+[package]
+name = "tracker-core"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+anyhow = "1"
+async-trait = "0.1"
+powersync = { git = "https://github.com/powersync-ja/powersync-native", rev = "dae36642d698c9e7dd19917afd998dc1e5307c88", features = ["tokio", "reqwest"] }
+rusqlite = { version = "0.39", features = ["backup", "bundled"] }
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "time", "macros", "net"] }
+reqwest = { version = "0.13", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["raw_value"] }
+chrono = { version = "0.4", features = ["serde"] }
+regex = "1"
+pulldown-cmark = "0.13"
+futures-lite = "2"
+fs2 = "0.4"
+
+[dev-dependencies]
+tempfile = "3"
