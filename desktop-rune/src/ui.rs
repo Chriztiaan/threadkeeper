@@ -507,14 +507,47 @@ fn settings_close_confirmation(s:&State,p:Paint)->Option<El>{
             .child(label("Changes in Settings have not been saved.",13.0,400.0,p.secondary).wrap())
             .child(row().gap(10.0).child(button("keep-editing-settings","Keep editing",p,|s|s.settings_close_confirm=false)).child(button("discard-settings","Discard changes",p,|s|s.discard_settings())))))
 }
+fn workspace_settings(s:&State,p:Paint)->El {
+    let busy=s.settings_busy();
+    let mut content=col().gap(15.0).w_full()
+        .child(label("Workspace",22.0,650.0,p.ink))
+        .child(label("Import one workspace.json file containing repositories, maintainers, and VIPs.",13.0,400.0,p.secondary).w_full().wrap())
+        .child(button("import-workspace","Import workspace…",p,|_|{}).w(190.0).disabled(!s.workspace_ready()).on_press_tx(|s:&mut State,tx|s.import_workspace(tx)));
+    if s.workspace.reading{content=content.child(label("Reading workspace…",12.0,400.0,p.secondary));}
+    if let Some(bundle)=&s.workspace.draft {
+        content=content.child(label("Review before saving",16.0,600.0,p.ink))
+            .child(label("Saving replaces all three lists, including any unsaved edits. An empty list clears that section. Your token and notes on issues stay unchanged.",12.0,400.0,p.secondary).w_full().wrap());
+        for (title,values) in [
+            ("Repositories",bundle.repositories.iter().map(|r|format!("{}{}{}",r.name,if r.enabled{""}else{" (disabled)"},if r.include_terms.is_empty(){String::new()}else{format!(" · titles: {}",r.include_terms.join(", "))})).collect::<Vec<_>>()),
+            ("Maintainers",bundle.maintainers.iter().map(|m|m.login.clone()).collect()),
+            ("VIPs",bundle.vips.iter().map(|v|format!("{} · {}{}",v.login,v.highlight.label(),if v.company.is_empty(){String::new()}else{format!(" · {}",v.company)})).collect()),
+        ] {
+            content=content.child(col().padding(12.0).gap(8.0).w_full().radius(7.0).fill(p.card)
+                .child(label(format!("{title} · {}",values.len()),13.0,600.0,p.ink))
+                .child(label(if values.is_empty(){"This list will be cleared.".into()}else{values.join("\n")},12.0,400.0,p.secondary).w_full().wrap()));
+        }
+    } else {
+        content=content.child(label("Share this file through your team's private configuration repository. Importing copies the lists into this app; pull and import again to pick up team changes.",12.0,400.0,p.secondary).w_full().wrap());
+    }
+    if let Some(error)=&s.workspace.error{content=content.child(label(error,12.0,400.0,c("#d18d6c")).w_full().wrap());}
+    for (name,error) in [("Repositories",&s.repo_prefs.error),("Maintainers",&s.maint_prefs.error),("VIPs",&s.cust_prefs.error)] {
+        if let Some(error)=error{content=content.child(label(format!("{name}: {error}"),12.0,400.0,c("#d18d6c")).w_full().wrap());}
+    }
+    if let Some(notice)=&s.workspace.notice{content=content.child(label(notice,12.0,400.0,p.green).w_full().wrap());}
+    col().key("workspace-settings").w(0.0).grow(1.0).min_w(0.0).h_full().padding(24.0).gap(16.0)
+        .child(col().key("workspace-review-scroll").grow(1.0).min_h(0.0).scroll(ScrollSpec{stick_bottom:false}).child(content))
+        .child(row().gap(8.0).child(el().grow(1.0))
+            .child(button("cancel-workspace",if s.settings_dirty(){"Cancel"}else{"Close"},p,|s|s.discard_settings()).disabled(busy))
+            .child(button("save-workspace",if s.workspace.applying{"Saving…"}else{"Save workspace"},p,|s|s.apply_workspace()).disabled(!s.workspace_ready()||s.workspace.draft.is_none())))
+}
 fn settings_content(s:&State,p:Paint)->El{
     let mut navigation=col().w(170.0).h_full().padding(14.0).gap(6.0).fill(p.side).border_sides([0.0,0.5,0.0,0.0],p.line);
-    for (tab,title) in [("repositories","Repositories"),("maintainers","Maintainers"),("customers","VIPs"),("developer","Developer work")]{
+    for (tab,title) in [("workspace","Workspace"),("repositories","Repositories"),("maintainers","Maintainers"),("customers","VIPs"),("developer","Developer work")]{
         navigation=navigation.child(row().key(format!("settings-{tab}")).role("button").label(title).focusable(true).h(34.0).px(10.0).center_y().radius(7.0).fill(if s.settings_tab==tab{p.selected}else{Color::TRANSPARENT}).hover(p.hover).disabled(s.settings_busy()).on_press(move|s:&mut State|s.settings_page(tab)).child(label(title,12.0,550.0,if s.settings_tab==tab{p.accent}else{p.secondary})));
     }
     col().key("settings-content").w_full().h_full().fill(p.bg)
         .child(row().h(60.0).pl(if s.settings_window{90.0}else{24.0}).center_y().window_drag().border_sides([0.0,0.0,0.5,0.0],p.line).child(label("Settings",16.0,600.0,p.ink)))
-        .child(row().grow(1.0).min_h(0.0).child(navigation).child(if s.settings_tab=="developer"{developer_settings(s,p)}else if s.settings_tab=="customers"{customer_settings_page(s,p)}else if s.settings_tab=="maintainers"{maintainer_settings_page(s,p)}else{repository_settings_page(s,p)}))
+        .child(row().grow(1.0).min_h(0.0).child(navigation).child(if s.settings_tab=="workspace"{workspace_settings(s,p)}else if s.settings_tab=="developer"{developer_settings(s,p)}else if s.settings_tab=="customers"{customer_settings_page(s,p)}else if s.settings_tab=="maintainers"{maintainer_settings_page(s,p)}else{repository_settings_page(s,p)}))
         .children(settings_close_confirmation(s,p))
 }
 fn settings_dialog(s:&State,p:Paint)->El{

@@ -4,6 +4,7 @@ mod auth;
 mod developer;
 mod scope;
 mod preferences;
+mod workspace;
 use scope::RepoScope;
 mod ui;
 #[cfg(test)] mod tests;
@@ -24,6 +25,7 @@ struct DiscussionState {
 static MAIN_APP: std::sync::OnceLock<rune::AppHandle<State>> = std::sync::OnceLock::new();
 static SETTINGS_WINDOW: std::sync::OnceLock<(rune::AppHandle<State>,rune::WindowHandle)> = std::sync::OnceLock::new();
 struct State {
+    workspace:workspace::Import,
     dev:developer::Developer,
     auth:auth::Setup, runtime_waker:Option<Waker>,
     demo_saved:Option<showcase::SavedSettings>, demo:bool, settings_close_confirm:bool, settings_window:bool, settings_tab:String, maint_prefs:preferences::MaintainerPreferences,
@@ -62,6 +64,7 @@ impl State {
         let detail = if preview {None}else{std::fs::read_to_string(data::cache_path("desktop-detail.json")).ok().and_then(|s| serde_json::from_str::<Item>(&s).ok())};
         let repo_scope=if preview {RepoScope::default()}else{RepoScope::load(&tracker_core::config::data_dir().join("repository-scope.json"))};
         let mut state = Self {
+            workspace:Default::default(),
             dev:developer::Developer::new(preview),
             auth:auth::Setup{ready:preview,..Default::default()},runtime_waker:None,
             demo_saved:None,demo:false,settings_close_confirm:false,settings_window:false,settings_tab:"repositories".into(),maint_prefs:Default::default(),maint_settings:Latest::default(),maint_saved:Latest::default(),maint_imports:Latest::default(),
@@ -115,12 +118,13 @@ impl State {
         self.repo_picker_open=false;
         if !self.settings_window && !self.preview && let Some((app,window))=SETTINGS_WINDOW.get(){
             let appearance=self.appearance;
-            app.update(move|s,_|{s.appearance=appearance;if !s.repo_prefs.open||(!s.repo_prefs.is_dirty()&&!s.maint_prefs.dirty&&!s.cust_prefs.is_dirty()&&!s.settings_busy()){s.maint_prefs.loaded=false;s.cust_prefs.loaded=false;s.repo_prefs.open=true;s.reload_repository_preferences();if s.settings_tab=="maintainers"{s.reload_maintainers();}else if s.settings_tab=="customers"{s.reload_customers();}}});
+            app.update(move|s,_|{s.appearance=appearance;if !s.repo_prefs.open||(!s.repo_prefs.is_dirty()&&!s.maint_prefs.dirty&&!s.cust_prefs.is_dirty()&&!s.settings_busy()){s.maint_prefs.loaded=false;s.cust_prefs.loaded=false;s.repo_prefs.open=true;s.reload_repository_preferences();if s.settings_tab=="maintainers"{s.reload_maintainers();}else if s.settings_tab=="customers"{s.reload_customers();}else if s.settings_tab=="workspace"{s.reload_maintainers();s.reload_customers();}}});
             window.open();return;
         }
         if !self.demo{self.maint_prefs.loaded=false;self.cust_prefs.loaded=false;}
         self.repo_picker_open=false;self.repo_prefs.open=true;
         self.reload_repository_preferences();
+        if self.settings_tab=="workspace"{self.reload_maintainers();self.reload_customers();}
     }
     fn reload_repository_preferences(&mut self){
         if self.demo{showcase::repositories(self);return;}
@@ -135,20 +139,20 @@ impl State {
         if self.preview{if let Some(saved)=self.demo_saved.as_mut(){saved.repositories=self.repo_prefs.repositories();}let settings=tracker_core::repository_config::RepositorySettings{repositories:self.repo_prefs.repositories(),path:self.repo_prefs.path.clone(),..Default::default()};self.repo_prefs.load(settings);if !self.settings_window&&!self.demo{self.repo_prefs.open=false;}return;}
         self.repo_settings_saved.request((self.repo_prefs.repositories(),self.repo_prefs.revision.clone()),|(repos,revision)|data::save_repositories(repos,revision));
     }
-    fn settings_dirty(&self)->bool {self.repo_prefs.is_dirty()||self.maint_prefs.dirty||self.cust_prefs.is_dirty()}
+    fn settings_dirty(&self)->bool {self.workspace.draft.is_some()||self.repo_prefs.is_dirty()||self.maint_prefs.dirty||self.cust_prefs.is_dirty()}
     fn discard_settings(&mut self) {
         if self.settings_busy(){return;}
-        self.settings_close_confirm=false;self.repo_prefs.open=false;
+        self.workspace.result.cancel();self.workspace.draft=None;self.workspace.error=None;self.workspace.notice=None;self.settings_close_confirm=false;self.repo_prefs.open=false;
         self.repo_prefs=Default::default();self.maint_prefs=Default::default();self.cust_prefs=Default::default();
     }
     fn request_settings_close(&mut self) {
         if self.settings_busy(){return;}
         if self.settings_dirty(){self.settings_close_confirm=true;}else{self.repo_prefs.open=false;}
     }
-    fn settings_busy(&self)->bool{self.repo_prefs.saving||self.repo_prefs.importing||self.maint_prefs.saving||self.maint_prefs.importing||self.cust_prefs.saving||self.cust_prefs.importing}
+    fn settings_busy(&self)->bool{self.workspace.reading||self.workspace.applying||self.repo_prefs.saving||self.repo_prefs.importing||self.maint_prefs.saving||self.maint_prefs.importing||self.cust_prefs.saving||self.cust_prefs.importing}
     fn settings_page(&mut self,tab:&str){
         if self.settings_busy(){return;}
-        self.dev.picker=false;self.settings_tab=tab.into();if tab=="developer" {if self.preview{if !self.demo{self.dev.profiles=vec!["Chriztiaan".into(),"example-maintainer".into()];}}else{self.dev.profiles_result.request((),|_|data::maintainer_settings());}}if tab=="maintainers"&&!self.maint_prefs.loaded&&!self.maint_prefs.loading{self.reload_maintainers();}else if tab=="customers"&&!self.cust_prefs.loaded&&!self.cust_prefs.loading{self.reload_customers();}
+        self.dev.picker=false;self.settings_tab=tab.into();if tab=="workspace"{if !self.maint_prefs.loaded&&!self.maint_prefs.loading{self.reload_maintainers();}if !self.cust_prefs.loaded&&!self.cust_prefs.loading{self.reload_customers();}}if tab=="developer" {if self.preview{if !self.demo{self.dev.profiles=vec!["Chriztiaan".into(),"example-maintainer".into()];}}else{self.dev.profiles_result.request((),|_|data::maintainer_settings());}}if tab=="maintainers"&&!self.maint_prefs.loaded&&!self.maint_prefs.loading{self.reload_maintainers();}else if tab=="customers"&&!self.cust_prefs.loaded&&!self.cust_prefs.loading{self.reload_customers();}
     }
     fn reload_maintainers(&mut self){
         if self.demo{showcase::maintainers(self);return;}
@@ -359,7 +363,7 @@ impl State {
         tx.scroll_into_view(format!("entry-{}", self.selected));
     }
 }
-fn setup(s: &mut State, waker: Waker) { s.runtime_waker=Some(waker.clone());s.dev.results.set_waker(waker.clone());s.dev.profiles_result.set_waker(waker.clone());s.auth.discovered.set_waker(waker.clone());s.auth.connected.set_waker(waker.clone()); s.cust_settings.set_waker(waker.clone());s.cust_saved.set_waker(waker.clone());s.cust_imports.set_waker(waker.clone());s.maint_settings.set_waker(waker.clone());s.maint_saved.set_waker(waker.clone());s.maint_imports.set_waker(waker.clone()); s.snapshots.set_waker(waker.clone()); s.details.set_waker(waker.clone()); s.discussion_results.set_waker(waker.clone()); s.saves.set_waker(waker.clone());s.github_refresh.set_waker(waker.clone());s.repo_settings.set_waker(waker.clone());s.repo_imports.set_waker(waker.clone());s.repo_settings_saved.set_waker(waker.clone());if !s.preview&&!s.settings_window {s.auth.discover();} }
+fn setup(s: &mut State, waker: Waker) { s.workspace.result.set_waker(waker.clone()); s.runtime_waker=Some(waker.clone());s.dev.results.set_waker(waker.clone());s.dev.profiles_result.set_waker(waker.clone());s.auth.discovered.set_waker(waker.clone());s.auth.connected.set_waker(waker.clone()); s.cust_settings.set_waker(waker.clone());s.cust_saved.set_waker(waker.clone());s.cust_imports.set_waker(waker.clone());s.maint_settings.set_waker(waker.clone());s.maint_saved.set_waker(waker.clone());s.maint_imports.set_waker(waker.clone()); s.snapshots.set_waker(waker.clone()); s.details.set_waker(waker.clone()); s.discussion_results.set_waker(waker.clone()); s.saves.set_waker(waker.clone());s.github_refresh.set_waker(waker.clone());s.repo_settings.set_waker(waker.clone());s.repo_imports.set_waker(waker.clone());s.repo_settings_saved.set_waker(waker.clone());if !s.preview&&!s.settings_window {s.auth.discover();} }
 fn poll(s: &mut State, now: f64, tx: &mut Tx) -> bool {
     let was_blocked=s.auth_blocked();
     let mut auth_changed=false;
@@ -398,6 +402,7 @@ fn poll(s: &mut State, now: f64, tx: &mut Tx) -> bool {
     if let Some(result)=s.repo_imports.take(){match result{Ok(repos)=>s.repo_prefs.import(repos),Err(error)=>{s.repo_prefs.importing=false;s.repo_prefs.error=Some(error);}}changed=true;}
     if let Some(result)=s.repo_settings.take(){match result{Ok(settings)=>s.repo_prefs.load(settings),Err(error)=>{s.repo_prefs.loading=false;s.repo_prefs.error=Some(error);}}changed=true;}
     if let Some(result)=s.repo_settings_saved.take(){match result{Ok(settings)=>{s.repo_prefs.load(settings);if !s.settings_window{s.repo_prefs.open=false;}s.refresh();},Err(error)=>{s.repo_prefs.saving=false;s.repo_prefs.error=Some(error);}}changed=true;}
+    changed |= s.poll_workspace();
 
     if let Some(result)=s.github_refresh.take() {
         match result {
@@ -474,7 +479,7 @@ fn key(s: &mut State, e: &KeyEvent, tx: &mut Tx) -> bool {
     if s.settings_close_confirm {return match e.key {Key::Escape=>{s.settings_close_confirm=false;true},Key::Command('w'|'s'|',')=>true,_=>false};}
     if s.repo_prefs.open {
         match &e.key {
-            Key::Command('s')=>{if s.settings_tab=="customers"{s.save_customers();}else if s.settings_tab=="maintainers"{s.save_maintainers();}else{s.save_repository_preferences();}},
+            Key::Command('s')=>{if s.settings_tab=="workspace"{s.apply_workspace();}else if s.settings_tab=="customers"{s.save_customers();}else if s.settings_tab=="maintainers"{s.save_maintainers();}else{s.save_repository_preferences();}},
             Key::Command(',')=>{},
             Key::Escape|Key::Command('w')=>s.request_settings_close(),
             _=>return false,
@@ -509,7 +514,7 @@ fn main() {
     }
     let spec = AppSpec { min_size: Some((640.0, 680.0)), families: (".SF NS", "Menlo"),
         setup: Some(setup), poll: Some(poll), on_key: Some(key),
-        scenes: &[("demo-start",|s|{s.preview=true;s.auth=auth::Setup::default();}),("demo",|s|s.connected("mock_token".into())),("showcase-comments",showcase::comments),("showcase-vips",showcase::vips),("showcase-followup",showcase::followup),("showcase-developer",showcase::work),("developer-paused",|s|{developer::preview(s);s.dev.items.clear();s.items.clear();s.dev.loaded_queues.clear();s.dev.checked=None;s.dev.paused=true;s.dev.retry_at=Some(chrono::Utc::now().timestamp_millis()+600_000);s.dev.error=Some("Showing saved results where available. Navigation and Refresh respect the cooldown.".into());s.developer_queue("participating");}),("developer-work",developer::preview),("developer-settings",|s|{s.open_repository_preferences();s.settings_page("developer");}),("reconnect",|s|{s.auth.ready=true;s.auth.started=true;s.auth.disconnected=true;s.auth.reconnect_open=true;s.auth.error=Some("Your GitHub token expired or was revoked. Connect again to resume syncing. Your saved data is still available.".into());}),("welcome",|s|{s.auth=auth::Setup::default();}),("github-setup-long-token",|s|{s.auth=auth::Setup::default();s.auth.started=true;s.auth.token=TextEdit::new(&"x".repeat(200)).secure();}),("github-setup",|s|{s.auth=auth::Setup::default();s.auth.started=true;}),("long-note", |s|{s.note=TextEdit::new(&"A saved note with several lines of context.\n".repeat(300));s.note_state=NoteState::Dirty;}), ("connection-preview", |s|{if let Some(item)=s.items.iter().find(|i|i.id!=s.selected){s.preview_connection(item.id.clone());}}), ("discussion", |s| {
+        scenes: &[("workspace-import",|s|{s.connected("mock_token".into());s.open_repository_preferences();s.settings_page("workspace");s.workspace.draft=Some(workspace::Bundle::parse(include_str!("../../workspace.example.json")).unwrap());}),("demo-start",|s|{s.preview=true;s.auth=auth::Setup::default();}),("demo",|s|s.connected("mock_token".into())),("showcase-comments",showcase::comments),("showcase-vips",showcase::vips),("showcase-followup",showcase::followup),("showcase-developer",showcase::work),("developer-paused",|s|{developer::preview(s);s.dev.items.clear();s.items.clear();s.dev.loaded_queues.clear();s.dev.checked=None;s.dev.paused=true;s.dev.retry_at=Some(chrono::Utc::now().timestamp_millis()+600_000);s.dev.error=Some("Showing saved results where available. Navigation and Refresh respect the cooldown.".into());s.developer_queue("participating");}),("developer-work",developer::preview),("developer-settings",|s|{s.open_repository_preferences();s.settings_page("developer");}),("reconnect",|s|{s.auth.ready=true;s.auth.started=true;s.auth.disconnected=true;s.auth.reconnect_open=true;s.auth.error=Some("Your GitHub token expired or was revoked. Connect again to resume syncing. Your saved data is still available.".into());}),("welcome",|s|{s.auth=auth::Setup::default();}),("github-setup-long-token",|s|{s.auth=auth::Setup::default();s.auth.started=true;s.auth.token=TextEdit::new(&"x".repeat(200)).secure();}),("github-setup",|s|{s.auth=auth::Setup::default();s.auth.started=true;}),("long-note", |s|{s.note=TextEdit::new(&"A saved note with several lines of context.\n".repeat(300));s.note_state=NoteState::Dirty;}), ("connection-preview", |s|{if let Some(item)=s.items.iter().find(|i|i.id!=s.selected){s.preview_connection(item.id.clone());}}), ("discussion", |s| {
             s.show_advice=false;
             if let Some(mut item)=s.selected_item().cloned(){
                 item.body="Example description for the discussion preview.".into();item.comments=2;

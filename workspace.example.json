@@ -1,0 +1,17 @@
+{
+  "repositories": [
+    { "name": "example/project", "enabled": true, "includeTerms": [] }
+  ],
+  "maintainers": [
+    { "login": "example-maintainer" }
+  ],
+  "vips": [
+    {
+      "login": "example-developer",
+      "fullName": "Example Developer",
+      "company": "Example Organization",
+      "notes": "Follow up before the next release.",
+      "highlight": "gold-star"
+    }
+  ]
+}
