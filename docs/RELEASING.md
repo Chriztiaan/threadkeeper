@@ -2,7 +2,7 @@
 
 ## Repository separation
 
-The public application is independent of team configuration. `team-config/` is an ignored, separately initialized Git repository containing `repositories.json`, `maintainers.json`, and `vips.json`. It is deliberately not a submodule: public contributors and CI do not need private repository access. Imports are snapshots, not a remote subscription. Pull/download the private repository and import each JSON under its matching Settings tab, then save.
+The public application is independent of team configuration. `team-config/` is an ignored, separately initialized Git repository containing one `workspace.json` with repositories, maintainers, and VIPs. It is deliberately not a submodule: public contributors and CI do not need private repository access. Imports are snapshots, not a remote subscription. Pull/download the private repository and use Settings → Workspace → Import workspace, review all three lists, and Save workspace.
 
 The local app history predates this separation and includes team rosters. Do not push that history to the public repository. Create the public repository from a reviewed clean export instead:
 

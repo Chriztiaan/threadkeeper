@@ -20,7 +20,9 @@ On first launch, follow the blocking GitHub setup screen to create and paste a r
 
 New installs start with empty repository and maintainer lists. Team rosters are shared separately in a private repository and imported through Settings; they are never bundled in release builds. See [GitHub distribution](docs/RELEASING.md) for CI releases and the private configuration workflow.
 
-Open **Settings…** with Command + comma. Repositories, Maintainers and VIPs each support JSON import, editing and live file reload.
+Open **Settings…** with Command + comma. For team onboarding, choose **Workspace → Import workspace…**, select one `workspace.json`, review all three lists, and click **Save workspace**. See [workspace.example.json](workspace.example.json) for the format. The file requires `repositories`, `maintainers`, and `vips` arrays; an empty array clears that section. Existing notes and your token are preserved.
+
+Repositories, Maintainers and VIPs also retain their individual imports and editors for changing a single list.
 
 Repositories can belong to any GitHub organization your account can read. Optional **Include terms** match any term in the issue or PR title only, ignoring case. Use comma-separated terms in Settings; leave empty to include everything. Old files with repository groups still import, but groups are ignored and omitted when saved.
 

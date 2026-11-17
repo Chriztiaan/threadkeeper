@@ -633,3 +633,34 @@ fn mock_token_runs_onboarding_and_all_demo_queues_without_backend() {
     rt.update(|s,_|s.connected("mock_token".into()));rt.frame(0.0);
     assert_eq!(rt.state.cust_prefs.rows[0].highlight.key(),"gold-star");
 }
+
+#[test]
+fn workspace_import_requires_all_lists_and_validates_before_staging() {
+    let valid=r#"{"repositories":[{"name":"acme/sdk","includeTerms":["SYNC","sync"]}],"maintainers":[{"login":"alice"}],"vips":[{"login":"bob","company":"Acme","notes":"Keep context","highlight":"subtle-tint"}]}"#;
+    let b=workspace::Bundle::parse(valid).unwrap();assert_eq!(b.repositories[0].include_terms,vec!["sync"]);assert_eq!(b.vips[0].notes,"Keep context");
+    for bad in [r#"{"repositories":[],"maintainers":[]}"#,r#"{"repositories":[],"maintainers":[],"vips":[],"vip":[]}"#,r#"{"repositories":[],"maintainers":[{"login":"alice"},{"login":"Alice"}],"vips":[]}"#,r#"{"repositories":[],"maintainers":[],"vips":[{"login":"bob","highlight":"invalid"}]}"#] {assert!(workspace::Bundle::parse(bad).is_err());}
+    assert!(workspace::Bundle::parse(r#"{"repositories":[],"maintainers":[],"vips":[]}"#).is_ok());
+}
+
+#[test]
+fn workspace_review_saves_all_lists_and_cancel_does_not_apply() {
+    let mut s=fixture();s.connected("mock_token".into());s.open_repository_preferences();s.settings_page("workspace");
+    let original=s.repo_prefs.rows.len();
+    s.workspace.draft=Some(workspace::Bundle::parse(r#"{"repositories":[{"name":"example/new"}],"maintainers":[{"login":"sam"}],"vips":[]}"#).unwrap());
+    let mut rt=Runtime::new(s,ui::view,(1380.0,880.0),Env::new(false,1.0));rt.poll=Some(poll);rt.frame(0.0);
+    assert_eq!(rt.state.repo_prefs.rows.len(),original);
+    click(&mut rt,"save-workspace");rt.frame(0.0);
+    assert_eq!(rt.state.repo_prefs.rows[0].name,"example/new");assert_eq!(rt.state.maint_prefs.rows[0].login,"sam");assert!(rt.state.cust_prefs.rows.is_empty());
+    assert!(rt.state.workspace.draft.is_none());assert!(rt.state.workspace.notice.is_some());assert!(!rt.state.settings_dirty());assert!(rt.state.repo_prefs.open);
+    rt.update(|s,_|s.workspace.draft=Some(workspace::Bundle::parse(r#"{"repositories":[],"maintainers":[],"vips":[]}"#).unwrap()));rt.frame(0.0);
+    click(&mut rt,"cancel-workspace");
+    assert_eq!(rt.state.demo_saved.as_ref().unwrap().repositories.len(),1);assert!(rt.state.workspace.draft.is_none());
+    rt.update(|s,_|s.open_repository_preferences());rt.frame(0.0);assert!(rt.state.workspace_ready());
+}
+
+#[test]
+fn workspace_failed_save_preserves_retry_draft_and_reports_partial_result() {
+    let mut s=fixture();s.workspace.draft=Some(workspace::Bundle::parse(r#"{"repositories":[],"maintainers":[],"vips":[]}"#).unwrap());
+    s.workspace.applying=true;s.maint_prefs.error=Some("GitHub unavailable".into());
+    assert!(s.poll_workspace());assert!(!s.workspace.applying);assert!(s.workspace.notice.is_none());assert!(s.workspace.draft.is_some());assert!(s.workspace.error.as_deref().unwrap().contains("Maintainers: GitHub unavailable"));
+}

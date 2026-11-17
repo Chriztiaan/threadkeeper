@@ -13,7 +13,7 @@ if out.exists() and any(out.iterdir()):
 for name,key in [('tracker.config.json','repositories'),('maintainers.json','maintainers')]:
     if json.loads((root/name).read_text()).get(key):
         parser.error(f'{name} still contains a private roster; public defaults must be empty.')
-files=['.gitignore','Cargo.toml','Cargo.lock','rust-toolchain.toml','README.md','tracker.config.json','maintainers.json','people.example.json','vips.example.json','threadkeeper-demo.gif']
+files=['.gitignore','Cargo.toml','Cargo.lock','rust-toolchain.toml','README.md','tracker.config.json','maintainers.json','people.example.json','vips.example.json','workspace.example.json','threadkeeper-demo.gif']
 folders=['.cargo','.github','tracker-core/src','tracker-core/tests','desktop-rune/src','desktop-rune/scripts','docs']
 files+=['tracker-core/Cargo.toml','tracker-core/README.md','desktop-rune/Cargo.toml','desktop-rune/README.md','desktop-rune/.gitignore','desktop-rune/rust-toolchain.toml']
 files+=['desktop-rune/assets/'+name for name in ['README.md','threadkeeper-app-icon.png','threadkeeper-mark.svg','threadkeeper-mark-body.svg']]
