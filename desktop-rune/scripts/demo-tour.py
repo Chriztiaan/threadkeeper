@@ -7,12 +7,14 @@ import argparse, hashlib, json, os, shutil, subprocess, tempfile
 root = Path(__file__).resolve().parents[2]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--verify', action='store_true', help='Replay twice and compare all checkpoint screenshots')
+parser.add_argument('--gif', type=Path, default=root/'threadkeeper-demo.gif', help='GIF destination (default: repo root)')
 parser.add_argument('--fps', type=int, default=12)
-parser.add_argument('--output', type=Path, default=root/'docs/screenshots/demo-tour')
+parser.add_argument('--output', type=Path, default=root/'.local/demo-tour')
 args = parser.parse_args()
 if not 1 <= args.fps <= 60:
     parser.error('--fps must be between 1 and 60')
 args.output.mkdir(parents=True, exist_ok=True)
+args.gif.parent.mkdir(parents=True, exist_ok=True)
 binary = root/'desktop-rune/target/debug/threadkeeper'
 if not binary.exists():
     parser.error('Build first: cargo build -p threadkeeper --offline')
@@ -72,9 +74,9 @@ with tempfile.TemporaryDirectory(prefix='threadkeeper-tour-') as directory:
         print(f'Verified {len(shots)} identical checkpoint screenshots across two runs.')
     (args.output/'manifest.json').write_text(json.dumps(dict(fps=args.fps,seconds=47,clock='2026-11-17T12:00:00Z',size='1380x880',theme='dark',screenshots={name:hashlib.sha256((args.output/f'{name}.png').read_bytes()).hexdigest() for name in shots}),indent=2)+'\n')
     cache=root/'.local/swift-module-cache'; cache.mkdir(parents=True,exist_ok=True)
-    subprocess.run(['swift','-module-cache-path',str(cache),str(root/'desktop-rune/scripts/frames-gif.swift'),str(args.output/'threadkeeper-demo.gif'),str(frames),str(args.fps)],check=True)
+    subprocess.run(['swift','-module-cache-path',str(cache),str(root/'desktop-rune/scripts/frames-gif.swift'),str(args.gif),str(frames),str(args.fps)],check=True)
     if shutil.which('ffmpeg'):
         subprocess.run(['ffmpeg','-y','-loglevel','error','-framerate',str(args.fps),'-i',str(frames/'frame_%04d.png'),'-c:v','libx264','-pix_fmt','yuv420p',str(args.output/'threadkeeper-demo.mp4')],check=True)
     else:
         print('GIF and screenshots generated. Install ffmpeg to also export MP4.')
-print(args.output)
+print(f"README GIF: {args.gif}\nDiagnostics: {args.output}")

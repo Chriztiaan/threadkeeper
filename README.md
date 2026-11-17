@@ -2,9 +2,7 @@
 
 **Keep the conversation moving.**
 
-![Threadkeeper](docs/screenshots/follow-up.png)
-
-[Animated tour](docs/screenshots/threadkeeper-tour.gif) · [Screenshots](docs/screenshots/README.md)
+![Threadkeeper demo — onboarding, follow-up, developer work, and settings](threadkeeper-demo.gif)
 
 A native Rust/Rune macOS app for following GitHub issues and pull requests across your own and external repositories. The embedded Rust backend uses PowerSync Native with local-only storage. GitHub access is read-only; notes and configuration stay local.
 
