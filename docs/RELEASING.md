@@ -14,7 +14,15 @@ The script uses an allowlist and refuses nonempty default rosters or an existing
 
 ## CI builds and releases
 
-`Tests` runs on main/init pushes and pull requests. `macOS release` builds and tests on Apple Silicon and Intel runners. Run it manually for downloadable Actions artifacts, or push a `vMAJOR.MINOR.PATCH` tag for a draft GitHub Release with both ZIPs and SHA-256 checksums. Publish the draft after checking the downloaded build. Re-running a tag can update a draft, but refuses to replace an already-published release.
+`Tests` runs on main/init pushes and pull requests. To release:
+
+1. Merge reviewed changes into `main`. The app's version in `desktop-rune/Cargo.toml` must be the version you intend to release (update Cargo.lock with a version bump).
+2. Open **Actions → macOS release → Run workflow**, select `main`, and enter the version, such as `0.1.0` (without `v`).
+3. CI validates the version, runs tests and builds on Apple Silicon and Intel.
+4. Only after both builds pass, CI tags the exact tested commit and creates a draft release containing both ZIPs and SHA-256 checksums.
+5. Download and test the app, then publish the draft in GitHub Releases.
+
+No local build or tag command is needed. Existing version tags cannot be moved to different commits. Reruns of the same commit can repair a draft's assets, but cannot replace published releases. Manually pushed `vMAJOR.MINOR.PATCH` tags remain supported. A tag created by this workflow uses GITHUB_TOKEN, so it does not trigger a second tag-push workflow run.
 
 Artifacts use stable names:
 

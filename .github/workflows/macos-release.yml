@@ -3,13 +3,46 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version matching desktop-rune/Cargo.toml (e.g. 0.1.0)'
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
-  group: macos-release-${{ github.ref }}
+  group: macos-release
   cancel-in-progress: false
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate release version
+        id: version
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: python3 desktop-rune/scripts/release-version.py
+      - name: Check existing tag points to this commit
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if git show-ref --verify --quiet "refs/tags/$TAG"; then
+            test "$(git rev-parse "$TAG^{commit}")" = "$GITHUB_SHA" || {
+              echo "::error::Tag $TAG already points to another commit. Choose a new version."
+              exit 1
+            }
+          fi
   build:
+    needs: prepare
     strategy:
       fail-fast: false
       matrix:
@@ -42,20 +75,9 @@ jobs:
         run: cargo build --release --locked -p threadkeeper
       - name: Package app
         env:
-          RELEASE_REF: ${{ github.ref_name }}
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
           BUILD_NUMBER: ${{ github.run_number }}
-        run: |
-          python3 - <<'PY'
-          import os, re, subprocess, tomllib
-          version=tomllib.load(open('desktop-rune/Cargo.toml','rb'))['package']['version']
-          ref=os.environ['RELEASE_REF']
-          if ref.startswith('v'):
-              if not re.fullmatch(r'v[0-9]+\.[0-9]+\.[0-9]+',ref):
-                  raise SystemExit('Release tags must be vMAJOR.MINOR.PATCH')
-              if version!=ref[1:]:
-                  raise SystemExit("Release tag must match desktop-rune/Cargo.toml version")
-          subprocess.run(['python3','desktop-rune/scripts/package.py','--profile','release','--version',version,'--build-number',os.environ['BUILD_NUMBER']],check=True)
-          PY
+        run: python3 desktop-rune/scripts/package.py --profile release --version "$RELEASE_VERSION" --build-number "$BUILD_NUMBER"
       - name: Ad-hoc sign preview and create ZIP
         env:
           ARCH: ${{ matrix.arch }}
@@ -72,12 +94,14 @@ jobs:
           path: release-assets/*
           if-no-files-found: error
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    needs: [prepare, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
           path: release-assets
@@ -86,7 +110,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ needs.prepare.outputs.tag }}
         run: |
           cat > release-notes.md <<'NOTES'
           Download arm64 for Apple Silicon or x86_64 for Intel. Unzip and move Threadkeeper.app to Applications.
@@ -95,6 +119,14 @@ jobs:
 
           Team rosters are distributed separately and can be imported through Settings. No team rosters or credentials are bundled in this release.
           NOTES
+          # Tag exactly the commit tested by this run, never the moving main branch.
+          git fetch origin --tags
+          if git show-ref --verify --quiet "refs/tags/$TAG"; then
+            test "$(git rev-parse "$TAG^{commit}")" = "$GITHUB_SHA"
+          else
+            git tag "$TAG" "$GITHUB_SHA"
+            git push origin "refs/tags/$TAG"
+          fi
           if gh release view "$TAG" >/dev/null 2>&1; then
             test "$(gh release view "$TAG" --json isDraft --jq .isDraft)" = true
             gh release upload "$TAG" release-assets/* --clobber
