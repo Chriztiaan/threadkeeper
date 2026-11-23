@@ -6,13 +6,54 @@
 
 A native Rust/Rune macOS app for following GitHub issues and pull requests across your own and external repositories. The embedded Rust backend uses PowerSync Native with local-only storage. GitHub access is read-only; notes and configuration stay local.
 
-## Run
+## Run on macOS
+
+Building requires Rust 1.99.1, Python 3.11 or newer, and Xcode command-line tools. No Node or web server is needed.
+
+### First-time setup
+
+Open Terminal and install Apple's command-line tools if you do not already have them:
 
 ```sh
+xcode-select --install
+```
+
+Wait for the installation to finish. If the tools are already installed, skip this step.
+
+Check your Python version:
+
+```sh
+python3 --version
+```
+
+If Python is missing or older than 3.11, install a current Python 3 release from [python.org](https://www.python.org/downloads/macos/). The packaging script uses `tomllib`, which requires Python 3.11 or newer.
+
+If you do not already have `rustup`, install Rust using the [official rustup installer](https://rustup.rs/). Choose the default installation when prompted:
+
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+. "$HOME/.cargo/env"
+```
+
+Install the exact Rust version this project uses (also run this if you already have Rust):
+
+```sh
+rustup toolchain install 1.99.1
+```
+
+### Build and open
+
+Clone the repository and run the launch script:
+
+```sh
+git clone https://github.com/Chriztiaan/threadkeeper.git
+cd threadkeeper
 sh desktop-rune/scripts/launch.sh
 ```
 
-Building requires Rust 1.99.1, Python 3 and Xcode command-line tools. Open the packaged app at `desktop-rune/dist/Threadkeeper.app`. No Node or web server is needed; the former web UI has been retired.
+If you already have a checkout, run the launch command from its root directory.
+
+The script builds, packages, and opens Threadkeeper. The first build downloads dependencies and can take several minutes. Later launches can open `desktop-rune/dist/Threadkeeper.app` directly without rebuilding. Quit an older running copy before opening a rebuilt app.
 
 On first launch, follow the blocking GitHub setup screen to create and paste a read-only fine-grained token. The app validates it and stores it in `~/.config/threadkeeper/credentials.json` with owner-only permissions. An explicit `GITHUB_TOKEN` environment variable also works; GitHub CLI credentials are not used.
 
